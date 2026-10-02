@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园三维导览</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #back {
+      position: fixed; top: 16px; left: 16px; z-index: 10;
+      background: rgba(255,255,255,.9); padding: 8px 14px;
+      border-radius: 6px; text-decoration: none; color: #333;
+    }
+  </style>
+</head>
+<body>
+  <a id="back" href="../index.html">← 返回信息中心</a>
+
+  <script src="../libs/three.min.js"></script>
+  <script src="../libs/OrbitControls.js"></script>
+  <script>
+    // 1. 三件套：场景、相机、渲染器
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xbfe3ff);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(12, 10, 14);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // 2. 灯光：环境光打底 + 平行光当太阳
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+    sun.position.set(10, 20, 10);
+    scene.add(sun);
+
+    // 3. 草坪：一块压平放倒的绿色平面
+    const lawn = new THREE.Mesh(
+      new THREE.PlaneGeometry(60, 60),
+      new THREE.MeshLambertMaterial({ color: 0x66aa44 })
+    );
+    lawn.rotation.x = -Math.PI / 2;
+    scene.add(lawn);
+
+    // 4. 四栋楼：forEach 批量生成
+    const spots = [
+      { name: '楠苑楼', x: -8, z: -6, color: 0xdd6644 },
+      { name: '梓苑楼', x: 8,  z: -6, color: 0x4477cc },
+      { name: '图书馆', x: -8, z: 6,  color: 0xddbb33 },
+      { name: '理科楼', x: 8,  z: 6,  color: 0x44aa77 }
+    ];
+    spots.forEach(s => {
+      const building = new THREE.Mesh(
+        new THREE.BoxGeometry(4, 6, 4),
+        new THREE.MeshLambertMaterial({ color: s.color })
+      );
+      building.position.set(s.x, 3, s.z);
+      scene.add(building);
+    });
+
+    // 5. 鼠标拖拽转视角
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    // 6. 动画循环 + 窗口变化自适应
+    const animate = () => {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
